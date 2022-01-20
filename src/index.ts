@@ -2,14 +2,41 @@ import express, { Request, Response, Application } from "express";
 import Joi from "joi";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-// import redis from "redis";
+import cors from "cors";
+import fs from "fs";
+import pinoHttp from "pino-http";
+import path from "path";
+import { redisClient } from "./redis";
+import { config } from "dotenv";
+
+// TODO: Extract functions into separate file to de-clutter
+/*
+  TODO: Would use database's native sorting methods for faster sorting in production
+  For small-scale testing, JS's native sort method works for now
+*/
 
 // initialize server
-const port = process.env.PORT || 5000;
 const app: Application = express();
 
+// Create server logging stream to access log file
+// prettier-ignore
+const accessLogStream = fs.createWriteStream(path.join(__dirname, "access.log"), { flags: "a" });
+const logger = pinoHttp(
+  {
+    customLogLevel: (res: any, err: any) =>
+      res.statusCode >= 500 ? "error" : "info",
+  },
+  accessLogStream
+);
+
+process.on("uncaughtException", (error) => {
+  console.log("uncaught error");
+});
+
 // express middleware
+config(); // dotenv process
 app.use(express.json()); // parse JSON payloads
+app.use(cors());
 app.use(helmet()); // set security-related HTTP response headers
 const expressRateLimiter = rateLimit({
   windowMs: 60 * 1000, // 60 seconds
@@ -29,6 +56,7 @@ interface Transaction {
 let userTransactions: Array<Transaction> = [];
 let payerBalances: { [key: string]: number } = {};
 let userTotalPoints = 0;
+redisClient.set("payerBalances", JSON.stringify(payerBalances));
 
 ////////////////////
 /////
@@ -37,8 +65,6 @@ let userTotalPoints = 0;
 /////
 /////
 ////////////////////
-
-// TODO: Extract functions into separate file to de-clutter
 
 // add points: request body validation schema
 // prettier-ignore
@@ -53,11 +79,6 @@ const addPoints = ({ payer, points, timestamp }: Transaction): void => {
   // convert to isoDate to milliseconds for sort comparison
   timestamp = +new Date(timestamp);
 
-  /*
-    TODO: Would use database's native sorting methods for faster sorting in production
-    For small-scale testing, JS's native sort method works for now
-  */
-
   // add transaction to userTransactions then sort by timestamp from most recent (left) to oldest (right)
   userTransactions.push({ payer, points, timestamp });
   userTransactions.sort((a, b) => b.timestamp - a.timestamp);
@@ -70,7 +91,7 @@ const addPoints = ({ payer, points, timestamp }: Transaction): void => {
   }
 
   // Add to user's total points
-  userTotalPoints += points;
+  userTotalPoints = Object.values(payerBalances).reduce((a, b) => a + b);
 };
 
 // subtract (spend) points: request body validation schema
@@ -80,6 +101,7 @@ const subtractPointsSchema = Joi.object({
 
 // subtract (spend) points: void function to spend points
 const subtractPoints = (pointsToSpend: number): void => {
+  console.log("subtracting points");
   while (pointsToSpend > 0) {
     const latestTransaction = userTransactions[userTransactions.length - 1];
     if (pointsToSpend >= latestTransaction.points) {
@@ -89,9 +111,6 @@ const subtractPoints = (pointsToSpend: number): void => {
 
       // remove latest transaction from userTransactions
       userTransactions.pop();
-
-      // reduce user's total points
-      userTotalPoints -= pointsToSpend;
 
       // reduce pointsToSpend by the latest transaction's points
       pointsToSpend -= latestTransaction.points;
@@ -103,13 +122,11 @@ const subtractPoints = (pointsToSpend: number): void => {
       // reduce points from latest transaction
       userTransactions[userTransactions.length - 1].points -= pointsToSpend;
 
-      // reduce user's total points
-      userTotalPoints -= pointsToSpend;
-
       // set pointsToSpend to zero if latest transaction was enough to cover
       pointsToSpend = 0;
     }
   }
+  userTotalPoints = Object.values(payerBalances).reduce((a, b) => a + b);
 };
 
 // subtract (spend) points: Return changes in balances
@@ -138,7 +155,6 @@ const getBalanceDifferences = (
 
 // root, sends back available endpoints
 app.get("/", (req: Request, res: Response) => {
-  console.log("hit");
   const endpoints: { GET: Array<string>; POST: Array<string> } = {
     GET: ["/points/:user_id"],
     POST: ["/points/:user_id/add", "/points/:user_id/subtract"],
@@ -148,16 +164,41 @@ app.get("/", (req: Request, res: Response) => {
 
 // get all points for a user
 app.get("/points/:user_id", (req: Request, res: Response) => {
-  res.send(payerBalances);
+  // Log requests and responses
+  logger(req, res);
+  req.log.info("/points/:user_id");
+
+  // Redis caching payer balances -- for example purposes
+  redisClient.get("payerBalances").then((results) => {
+    if (!results) {
+      // if key isn't stored in cache
+      redisClient.set("payerBalances", JSON.stringify(payerBalances));
+      redisClient.get("payerBalances").then((results) => {
+        res.send(JSON.parse(results!));
+      });
+    } else {
+      res.send(JSON.parse(results));
+    }
+  });
 });
 
 // add points to a user's balance
 // prettier-ignore
 app.post("/points/:user_id/add", (req: Request, res: Response) => {
+  // Log requests and responses
+  logger(req, res);
+  req.log.info("/points/:user_id/add");
+
+  // Validate request object
   const { error, value } = addPointsSchema.validate(req.body);
 
   if (error === undefined) { // add transaction to userTransactions if valid request
+    // add points
     addPoints(value)
+
+    // set new value for payerBalances in Redis cache
+    redisClient.set('payerBalances', JSON.stringify(payerBalances))
+
     res.sendStatus(201);
   } else { // send error code if invalid request
     res.sendStatus(400);
@@ -166,7 +207,18 @@ app.post("/points/:user_id/add", (req: Request, res: Response) => {
 
 // subtract (spend) points from a user's balance
 app.post("/points/:user_id/subtract", (req: Request, res: Response) => {
+  console.log("subtracting request", req.body);
+  console.log("payer balances", payerBalances);
+  console.log("user total points", userTotalPoints);
+
+  // Log requests and responses
+  logger(req, res);
+  req.log.info("/points/:user_id/subtract");
+
+  // Validate request object
   const { error, value } = subtractPointsSchema.validate(req.body);
+  console.log("validation", error, value);
+  console.log("new line ------------------------------------------------");
 
   if (error === undefined && value.points <= userTotalPoints) {
     const payerBalanceChanges = Object.assign({}, payerBalances);
@@ -174,7 +226,11 @@ app.post("/points/:user_id/subtract", (req: Request, res: Response) => {
     // void function that subtracts points from multiple sources
     subtractPoints(value.points);
 
+    // assign new object containing differences in balance
     const changes = getBalanceDifferences(payerBalanceChanges, payerBalances);
+
+    // set new value for payerBalances in Redis cache
+    redisClient.set("payerBalances", JSON.stringify(payerBalances));
 
     res.send(changes);
   } else {
@@ -182,7 +238,7 @@ app.post("/points/:user_id/subtract", (req: Request, res: Response) => {
   }
 });
 
-const server = app.listen(port, () => {
+const server = app.listen(process.env.PORT || 5000, () => {
   console.log("App listening at http://localhost:5000");
 });
 
