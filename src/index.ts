@@ -29,10 +29,6 @@ const logger = pinoHttp(
   accessLogStream
 );
 
-process.on("uncaughtException", (error) => {
-  console.log("uncaught error");
-});
-
 // express middleware
 config(); // dotenv process
 app.use(express.json()); // parse JSON payloads
@@ -101,7 +97,6 @@ const subtractPointsSchema = Joi.object({
 
 // subtract (spend) points: void function to spend points
 const subtractPoints = (pointsToSpend: number): void => {
-  console.log("subtracting points");
   while (pointsToSpend > 0) {
     const latestTransaction = userTransactions[userTransactions.length - 1];
     if (pointsToSpend >= latestTransaction.points) {
@@ -207,18 +202,12 @@ app.post("/points/:user_id/add", (req: Request, res: Response) => {
 
 // subtract (spend) points from a user's balance
 app.post("/points/:user_id/subtract", (req: Request, res: Response) => {
-  console.log("subtracting request", req.body);
-  console.log("payer balances", payerBalances);
-  console.log("user total points", userTotalPoints);
-
   // Log requests and responses
   logger(req, res);
   req.log.info("/points/:user_id/subtract");
 
   // Validate request object
   const { error, value } = subtractPointsSchema.validate(req.body);
-  console.log("validation", error, value);
-  console.log("new line ------------------------------------------------");
 
   if (error === undefined && value.points <= userTotalPoints) {
     const payerBalanceChanges = Object.assign({}, payerBalances);
