@@ -10,8 +10,16 @@ const app: Application = express();
 app.use(express.json()); // parse JSON payloads
 app.use(helmet()); // set security-related HTTP response headers
 
-// initialize temporary data storage, array of arrays for sorting
-let tracker: { payer: string; points: number; timestamp: string }[][] = [];
+// initialize temporary data storage, array of objects for sorting
+// prettier-ignore
+interface Transaction {
+  payer: string;
+  points: number;
+  timestamp: number
+}
+let userTransactions: Array<Transaction> = [];
+let payerBalances: { [key: string]: number } = {};
+let userTotalPoints = 0;
 
 // root, sends back available endpoints
 app.get("/", (req: Request, res: Response) => {
@@ -29,9 +37,9 @@ app.get("/points/:user_id", (req: Request, res: Response) => {
   res.sendStatus(200);
 });
 
-// add points: client request body validation schema
+// add points: request body validation schema
 // prettier-ignore
-const transactionSchema = Joi.object({
+const addPointsSchema = Joi.object({
   payer: Joi.string().pattern(/^[A-Z]+$/, "capital letters").required(), // check payer and for A-Z chars
   points: Joi.number().integer().required(), // check points and if integer
   timestamp: Joi.string().isoDate().required(), // check timestamp is isoDate
@@ -40,19 +48,77 @@ const transactionSchema = Joi.object({
 // add points to a user's balance
 // prettier-ignore
 app.post("/points/:user_id/add", (req: Request, res: Response) => {
-  const { error, value } = transactionSchema.validate(req.body);
-  if (error === undefined) { // if valid input
-    tracker.push([value]);
-    res.send(tracker);
-  } else { // if bad input
+  const { error, value } = addPointsSchema.validate(req.body);
+
+  if (error === undefined) { // add transaction to userTransactions if valid request
+    let { payer, points, timestamp } = value;
+
+    // convert to isoDate to milliseconds for sort comparison
+    timestamp = +new Date(timestamp);
+
+    /*
+      NOTE: Would use database's native sorting methods for faster sorting in production
+      For small-scale testing, JS's native sort method works for now
+     */
+
+    // add transaction to userTransactions then sort by timestamp from most recent (left) to oldest (right)
+    userTransactions.push({ payer, points, timestamp });
+    userTransactions.sort((a, b) => b.timestamp - a.timestamp);
+
+    // Add payer and points to payerBalances, add points if already exists
+    payerBalances[payer] = payerBalances[payer] + points || points;
+
+    // Add to user's total points
+    userTotalPoints += points;
+
+    console.log('total points', userTotalPoints)
+    console.log('payer balances', payerBalances)
+    console.log('user transactions', userTransactions)
+    res.sendStatus(201);
+  } else { // send error code if invalid request
     res.sendStatus(400);
   }
 });
 
+// subtract (spend) points: request body validation schema
+const subtractPointsSchema = Joi.object({
+  points: Joi.number().integer().required(), // check points and if integer
+});
+
 // subtract (spend) points from a user's balance
 app.post("/points/:user_id/subtract", (req: Request, res: Response) => {
-  console.log("hit");
-  res.sendStatus(200);
+  const { error, value } = subtractPointsSchema.validate(req.body);
+  if (error === undefined && value.points <= userTotalPoints) {
+    let pointsToSpend = value.points;
+
+    // TODO: carve this out into its own function outside of the post request
+    while (pointsToSpend > 0) {
+      const latestTransaction = userTransactions[userTransactions.length - 1];
+      if (pointsToSpend >= latestTransaction.points) {
+        // remove latest transaction from userTransactions
+        // decrement from payerBalances
+        payerBalances[latestTransaction.payer] -= latestTransaction.points;
+        userTransactions.pop();
+        userTotalPoints -= pointsToSpend;
+        pointsToSpend -= latestTransaction.points;
+      } else {
+        // reduce points from payer balance of latest transaction
+        payerBalances[latestTransaction.payer] -= latestTransaction.points;
+        // reduce points from latest transaction
+        userTransactions[userTransactions.length - 1].points -= pointsToSpend;
+        userTotalPoints -= pointsToSpend;
+        pointsToSpend = 0;
+      }
+    }
+
+    console.log("total points", userTotalPoints);
+    console.log("payer balances", payerBalances);
+    console.log("user transactions", userTransactions);
+    console.log("value", value.points);
+    res.send(payerBalances);
+  } else {
+    res.sendStatus(400);
+  }
 });
 
 const server = app.listen(port, () => {
