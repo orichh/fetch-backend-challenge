@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node src/index.ts",
-    "test": "jest --coverage"
+    "dev": "forever start ts-node src/index.ts",
+    "test": "jest --coverage",
+    "start": "NODE_ENV=production nodemon"
   },
   "repository": {
     "type": "git",
@@ -22,6 +23,7 @@
     "dotenv": "^14.2.0",
     "express": "^4.17.2",
     "express-rate-limit": "^6.1.0",
+    "forever": "^4.0.2",
     "helmet": "^5.0.1",
     "joi": "^17.5.0",
     "morgan": "^1.10.0",
