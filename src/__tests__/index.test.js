@@ -111,7 +111,7 @@ describe("POST /points/:user_id/subtract", () => {
       .set("Content-Type", "application/json")
       .set("Accept", "application/json");
     let pointsResponse = await request(server).get("/points/1");
-    // setting expect to equal 4000 for now as server isn't closing correctly
+    // TODO: setting expect to equal 4000 for now as server isn't closing correctly
     // after each test, so prior changes still active
     expect(pointsResponse.body["UNLEVER"]).toEqual(4000);
     expect(responseAfterAdding.status).toEqual(201);

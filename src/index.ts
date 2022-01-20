@@ -54,7 +54,7 @@ const addPoints = ({ payer, points, timestamp }: Transaction): void => {
   timestamp = +new Date(timestamp);
 
   /*
-    NOTE: Would use database's native sorting methods for faster sorting in production
+    TODO: Would use database's native sorting methods for faster sorting in production
     For small-scale testing, JS's native sort method works for now
   */
 
