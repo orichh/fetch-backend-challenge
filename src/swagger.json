@@ -1,0 +1,94 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "Richard's submission for Fetch's Back-End Challenge",
+    "version": "1.0"
+  },
+  "servers": [{ "url": "http://localhost:5000" }],
+  "paths": {
+    "/points/1": {
+      "get": {
+        "description": "get total points",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/points/1/add": {
+      "post": {
+        "description": "add a transaction",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "payer": {
+                    "type": "string"
+                  },
+                  "points": {
+                    "type": "integer"
+                  },
+                  "timestamp": {
+                    "type": "string"
+                  }
+                }
+              },
+              "examples": {
+                "payer": {
+                  "summary": "add payer dannon with 1000 points ",
+                  "value": {
+                    "payer": "DANNON",
+                    "points": 1000,
+                    "timestamp": "2020-10-31T10:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/points/1/subtract": {
+      "post": {
+        "description": "spend points",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "points": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "examples": {
+                "payer": {
+                  "summary": "spend 1000 points ",
+                  "value": {
+                    "points": 1000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  }
+}
