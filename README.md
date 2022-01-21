@@ -50,5 +50,6 @@ Kanban Board: https://github.com/richardhyesungo/fetch-backend-challenge/project
 5. The payer input only accepts characters from A-Z and adds 300 points to that payer
 6. The 'Spend Points' input only accepts positive integers, and will not process if the spend points exceed available points
 
-![ezgif com-gif-maker (4)](https://user-images.githubusercontent.com/18966944/150441085-49baff47-5a67-447a-831d-48ae5ef2ffa3.gif)
+![ezgif com-gif-maker (5)](https://user-images.githubusercontent.com/18966944/150441525-7228647c-63bd-4cb5-8b34-5187693077e6.gif)
+
 
