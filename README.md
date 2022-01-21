@@ -1,6 +1,16 @@
-# Fetch Rewards Coding Exercise - Backend Software Engineering
+<h1 align="center">Fetch Rewards Coding Exercise - Backend Software Engineering</h1>
 
-Kanban Board: https://github.com/richardhyesungo/fetch-backend-challenge/projects/1
+<table align="center">
+  <tr>
+    <td align="center"><a href="https://github.com/richardhyesungo"><img src="https://avatars.githubusercontent.com/u/18966944?v=4" width="100px;" alt=""/><br /><sub><b>Richard O</b></sub></a><br /></td>
+  </tr>
+</table>
+
+## Overview
+1. Kanban Board: https://github.com/richardhyesungo/fetch-backend-challenge/projects/1
+2. [**Tech Stack**](#tech-stack)
+3. [**Repo Instructions**](#2-ways-to-run-this-application)
+4. [**Possible Improvements**](#possible-improvements-and-additional-features)
 
 ## Tech Stack:
 1. JavaScript / TypeScript
@@ -14,8 +24,8 @@ Kanban Board: https://github.com/richardhyesungo/fetch-backend-challenge/project
 9. Forever
 
 # 2 Ways to Run This Application:
-1. With `docker-compose up`
-2. Without docker-compose using `npm start`
+1. With Docker and `docker-compose up`
+2. Without Docker using `npm start`
 
 ### Running with Docker
 1. Make sure you have docker and docker-compose installed beforehand
@@ -52,4 +62,10 @@ Kanban Board: https://github.com/richardhyesungo/fetch-backend-challenge/project
 
 ![ezgif com-gif-maker (5)](https://user-images.githubusercontent.com/18966944/150441525-7228647c-63bd-4cb5-8b34-5187693077e6.gif)
 
-
+## Possible Improvements and Additional Features
+1. Increase test coverage and add unit testing for functions
+2. Load test and optimize
+3. Extract helper functions into separate file to reduce clutter of index.js
+4. Improve access.log logging details by including unhandledexception and unhandledrejection errors
+5. Create a package.json build script to transpile typescript files into a dist folder to run
+6. Monitor response times, memory, and CPU usage using a tool like New Relic
