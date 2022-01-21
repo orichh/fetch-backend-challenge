@@ -1,0 +1,64 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "Richard's submission for Fetch's Back-End Challenge",
+    "version": "1.0"
+  },
+  "servers": [{ "url": "http//localhost:5000" }],
+  "paths": {
+    "/points/1": {
+      "get": {
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": ["add"],
+        "description": "testing",
+        "requestBody": {
+          "description": "testing",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "payer": {
+                    "type": "string"
+                  },
+                  "points": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "timestamp": {
+                    "type": "string"
+                  }
+                }
+              },
+              "examples": {
+                "payer": {
+                  "summary": "add payer dannon with 1000 points ",
+                  "description": "testing",
+                  "value": {
+                    "payer": "DANNON",
+                    "points": 1000,
+                    "timestamp": "2020-10-31T10:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  }
+}

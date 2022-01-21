@@ -1,9 +1,9 @@
 import * as redis from "redis";
 
-// const redisClient = redis.createClient();
-const redisClient = redis.createClient({
-  socket: { port: 6379, host: "redis" },
-});
+const redisClient = redis.createClient();
+// const redisClient = redis.createClient({
+//   socket: { port: 6379, host: "redis" },
+// });
 
 redisClient.connect();
 redisClient.on("connect", () => {

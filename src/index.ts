@@ -8,6 +8,8 @@ import pinoHttp from "pino-http";
 import path from "path";
 import { redisClient } from "./redis";
 import { config } from "dotenv";
+import swaggerUi from "swagger-ui-express";
+import * as swaggerDocument from "./swagger.json";
 
 // TODO: Extract functions into separate file to de-clutter
 /*
@@ -30,6 +32,7 @@ const logger = pinoHttp(
 );
 
 // express middleware
+// prettier-ignore
 config(); // dotenv process
 app.use(express.json()); // parse JSON payloads
 app.use(cors());
@@ -41,6 +44,7 @@ const expressRateLimiter = rateLimit({
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 app.use(expressRateLimiter); // limits amount of requests to the server
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // initialize temporary data storage, array of objects for sorting
 // prettier-ignore
@@ -62,14 +66,6 @@ redisClient.set("payerBalances", JSON.stringify(payerBalances));
 /////
 ////////////////////
 
-// add points: request body validation schema
-// prettier-ignore
-const addPointsSchema = Joi.object({
-  payer: Joi.string().pattern(/^[A-Z]+$/, "capital letters").required(), // check payer and for A-Z chars
-  points: Joi.number().integer().required(), // check points and if integer
-  timestamp: Joi.string().isoDate().required(), // check timestamp is isoDate
-});
-
 // add points: void function to add points.
 const addPoints = ({ payer, points, timestamp }: Transaction): void => {
   // convert to isoDate to milliseconds for sort comparison
@@ -89,11 +85,6 @@ const addPoints = ({ payer, points, timestamp }: Transaction): void => {
   // Add to user's total points
   userTotalPoints = Object.values(payerBalances).reduce((a, b) => a + b);
 };
-
-// subtract (spend) points: request body validation schema
-const subtractPointsSchema = Joi.object({
-  points: Joi.number().integer().required(), // check points and if integer
-});
 
 // subtract (spend) points: void function to spend points
 const subtractPoints = (pointsToSpend: number): void => {
@@ -157,7 +148,6 @@ app.get("/", (req: Request, res: Response) => {
   res.send(endpoints);
 });
 
-// get all points for a user
 app.get("/points/:user_id", (req: Request, res: Response) => {
   // Log requests and responses
   logger(req, res);
@@ -177,9 +167,18 @@ app.get("/points/:user_id", (req: Request, res: Response) => {
   });
 });
 
+// add points: request body validation schema
+// prettier-ignore
+const addPointsSchema = Joi.object({
+  payer: Joi.string().pattern(/^[A-Z]+$/, "capital letters").required(), // check payer and for A-Z chars
+  points: Joi.number().integer().required(), // check points and if integer
+  timestamp: Joi.string().isoDate().required(), // check timestamp is isoDate
+});
+
 // add points to a user's balance
 // prettier-ignore
 app.post("/points/:user_id/add", (req: Request, res: Response) => {
+  console.log(req.body)
   // Log requests and responses
   logger(req, res);
   req.log.info("/points/:user_id/add");
@@ -198,6 +197,11 @@ app.post("/points/:user_id/add", (req: Request, res: Response) => {
   } else { // send error code if invalid request
     res.sendStatus(400);
   }
+});
+
+// subtract (spend) points: request body validation schema
+const subtractPointsSchema = Joi.object({
+  points: Joi.number().integer().required(), // check points and if integer
 });
 
 // subtract (spend) points from a user's balance
