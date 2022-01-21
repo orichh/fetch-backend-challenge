@@ -65,7 +65,7 @@ redisClient.set("payerBalances", JSON.stringify(payerBalances));
 // add points: request body validation schema
 // prettier-ignore
 const addPointsSchema = Joi.object({
-  payer: Joi.string().pattern(/^[A-Z]+$/, "capital letters").required(), // check payer and for A-Z chars
+  payer: Joi.string().pattern(/^[A-Z *]+$/, "capital letters").required(), // check payer and for A-Z chars
   points: Joi.number().integer().required(), // check points and if integer
   timestamp: Joi.string().isoDate().required(), // check timestamp is isoDate
 });
