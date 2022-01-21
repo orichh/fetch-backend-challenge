@@ -178,7 +178,6 @@ const addPointsSchema = Joi.object({
 // add points to a user's balance
 // prettier-ignore
 app.post("/points/:user_id/add", (req: Request, res: Response) => {
-  console.log(req.body)
   // Log requests and responses
   logger(req, res);
   req.log.info("/points/:user_id/add");
