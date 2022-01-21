@@ -22,6 +22,7 @@
 7. Redis
 8. Pino / Pino-http
 9. Forever
+10. OpenAPI / Swagger UI
 
 # 2 Ways to Run This Application:
 1. With Docker and `docker-compose up`
