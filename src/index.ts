@@ -120,15 +120,17 @@ const getBalanceDifferences = (
   payerBalanceChanges: { [key: string]: number },
   payerBalances: { [key: string]: number }
 ) => {
+  let arr = [];
   for (const [payer, points] of Object.entries(payerBalances)) {
     if (payerBalanceChanges[payer] === points) {
       delete payerBalanceChanges[payer];
     } else {
+      arr.push({ payer: payer, points: points - payerBalanceChanges[payer] });
       payerBalanceChanges[payer] = points - payerBalanceChanges[payer];
     }
   }
 
-  return payerBalanceChanges;
+  return arr;
 };
 
 ////////////////////
@@ -141,11 +143,7 @@ const getBalanceDifferences = (
 
 // root, sends back available endpoints
 app.get("/", (req: Request, res: Response) => {
-  const endpoints: { GET: Array<string>; POST: Array<string> } = {
-    GET: ["/points/:user_id"],
-    POST: ["/points/:user_id/add", "/points/:user_id/subtract"],
-  };
-  res.send(endpoints);
+  res.send("Go to the endpoint localhost:5000/api-docs for more information");
 });
 
 app.get("/points/:user_id", (req: Request, res: Response) => {

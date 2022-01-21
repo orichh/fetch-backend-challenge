@@ -27,6 +27,42 @@
 1. With Docker and `docker-compose up`
 2. Without Docker using `npm start`
 
+### Available Endpoints:
+1. GET - "localhost:5000/points/1" -> get points
+
+```
+// Example axios GET request:
+
+axios.get("http://localhost:5000/points/1")
+  .then((response) => {})
+  .catch((error) => {});
+```
+
+2. POST - "localhost:5000/points/1/add" -> add points
+
+```
+// Example axios POST request:
+
+axios.post("http://localhost:5000/points/1/add", {
+    payer: "DANNON,                      // must be A-Z characters
+    points: 300,                         // must be integer
+    timestamp: "2014-09-02T12:00:00Z",   // must be iso date format
+  })
+  .then((response) => {})
+  .catch((error) => {});
+```
+
+
+3. POST - "localhost:5000/points/1/subtract" -> subtract points
+
+```
+// Example axios POST request:
+
+axios.post("http://localhost:5000/points/1/subtract", {points: 1000})
+  .then((response) => {})
+  .catch((error) => {});
+```
+
 ### Running with Docker
 1. Make sure you have docker and docker-compose installed beforehand
 2. Open terminal on local machine
@@ -39,7 +75,7 @@
     });
     ```
 7. Create docker image by running the terminal command `docker build -t "fbc" ./`
-8. Run the express server the terminal command `docker-compose up`
+8. Run the express server with the terminal command `docker-compose up`
 
 ### Running without docker
 1. Open terminal on local machine
@@ -69,3 +105,4 @@
 4. Improve access.log logging details by including unhandledexception and unhandledrejection errors
 5. Create a package.json build script to transpile typescript files into a dist folder to run
 6. Monitor response times, memory, and CPU usage using a tool like New Relic
+7. Implement the :user_id by determining points per user
