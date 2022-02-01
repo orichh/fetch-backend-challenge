@@ -22,12 +22,14 @@
 7. Redis
 8. Pino / Pino-http
 9. Forever
+10. OpenAPI / Swagger UI
 
 # 2 Ways to Run This Application:
 1. With Docker and `docker-compose up`
 2. Without Docker using `npm start`
 
 ### Available Endpoints:
+NOTE: Also available by navigating to localhost:5000/api-docs after starting the server for user-friendly interaction with endpoints via OpenAPI / Swagger
 1. GET - "localhost:5000/points/1" -> get points
 
 ```
@@ -87,6 +89,11 @@ axios.post("http://localhost:5000/points/1/subtract", {points: 1000})
     ```
 5. Run `npm ci` to install dependencies
 6. Run `npm start` to run the server
+
+## Optional - Run with OpenAPI / Swagger
+1. Navigate to localhost:5000/api-docs after starting the server
+![ezgif com-gif-maker (6)](https://user-images.githubusercontent.com/18966944/150612024-2eebf2fb-2ca3-4fcd-b5f2-64735c27df72.gif)
+
 
 ## Optional - Run React front-end for simple interface with the server
 1. From the root of the fetch-backend-challenge folder, run `cd client`
