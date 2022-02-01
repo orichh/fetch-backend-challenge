@@ -9,6 +9,7 @@ import path from "path";
 import { config } from "dotenv";
 import swaggerUi from "swagger-ui-express";
 import * as swaggerDocument from "./swagger.json";
+import { getBalanceDifferences } from "./helpers/index";
 
 // TODO: Extract functions into separate file to de-clutter
 /*
@@ -113,24 +114,6 @@ const subtractPoints = (pointsToSpend: number): void => {
   }
 };
 
-// subtract (spend) points: Return changes in balances
-const getBalanceDifferences = (
-  payerBalanceChanges: { [key: string]: number },
-  payerBalances: { [key: string]: number }
-) => {
-  let arr = [];
-  for (const [payer, points] of Object.entries(payerBalances)) {
-    if (payerBalanceChanges[payer] === points) {
-      delete payerBalanceChanges[payer];
-    } else {
-      arr.push({ payer: payer, points: points - payerBalanceChanges[payer] });
-      payerBalanceChanges[payer] = points - payerBalanceChanges[payer];
-    }
-  }
-
-  return arr;
-};
-
 ////////////////////
 /////
 /////
@@ -149,19 +132,6 @@ app.get("/points/:user_id", (req: Request, res: Response) => {
   logger(req, res);
   req.log.info("/points/:user_id");
   res.send(payerBalances);
-
-  // // Redis caching payer balances -- for example purposes
-  // redisClient.get("payerBalances").then((results) => {
-  //   if (!results) {
-  //     // if key isn't stored in cache
-  //     redisClient.set("payerBalances", JSON.stringify(payerBalances));
-  //     redisClient.get("payerBalances").then((results) => {
-  //       res.send(JSON.parse(results!));
-  //     });
-  //   } else {
-  //     res.send(JSON.parse(results));
-  //   }
-  // });
 });
 
 // add points: request body validation schema
