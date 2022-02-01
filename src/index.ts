@@ -191,8 +191,6 @@ app.post("/points/:user_id/subtract", (req: Request, res: Response) => {
   }
 });
 
-const server = app.listen(process.env.PORT || 5000, () => {
+export const server = app.listen(process.env.PORT || 5000, () => {
   console.log("App listening at http://localhost:5000");
 });
-
-module.exports = server;
