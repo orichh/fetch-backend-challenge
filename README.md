@@ -19,15 +19,9 @@
 4. Prettier
 5. Docker / Docker-compose
 6. React via create-react-app
-<<<<<<< HEAD
-7. Redis
-8. Pino / Pino-http
-9. Forever
-10. OpenAPI / Swagger UI
-=======
 7. Pino / Pino-http
 8. Forever
->>>>>>> 2088075b2a541bd5ea2f7517edc75755e6b96746
+9. OpenAPI / Swagger UI
 
 # 2 Ways to Run This Application:
 1. With Docker and `docker-compose up`
