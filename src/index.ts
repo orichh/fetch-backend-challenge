@@ -6,7 +6,6 @@ import cors from "cors";
 import fs from "fs";
 import pinoHttp from "pino-http";
 import path from "path";
-import { redisClient } from "./redis";
 import { config } from "dotenv";
 import swaggerUi from "swagger-ui-express";
 import * as swaggerDocument from "./swagger.json";
@@ -56,7 +55,6 @@ interface Transaction {
 let userTransactions: Array<Transaction> = [];
 let payerBalances: { [key: string]: number } = {};
 let userTotalPoints = 0;
-redisClient.set("payerBalances", JSON.stringify(payerBalances));
 
 ////////////////////
 /////
@@ -83,11 +81,12 @@ const addPoints = ({ payer, points, timestamp }: Transaction): void => {
   }
 
   // Add to user's total points
-  userTotalPoints = Object.values(payerBalances).reduce((a, b) => a + b);
+  userTotalPoints += points;
 };
 
 // subtract (spend) points: void function to spend points
 const subtractPoints = (pointsToSpend: number): void => {
+  userTotalPoints -= pointsToSpend;
   while (pointsToSpend > 0) {
     const latestTransaction = userTransactions[userTransactions.length - 1];
     if (pointsToSpend >= latestTransaction.points) {
@@ -112,7 +111,6 @@ const subtractPoints = (pointsToSpend: number): void => {
       pointsToSpend = 0;
     }
   }
-  userTotalPoints = Object.values(payerBalances).reduce((a, b) => a + b);
 };
 
 // subtract (spend) points: Return changes in balances
@@ -150,19 +148,20 @@ app.get("/points/:user_id", (req: Request, res: Response) => {
   // Log requests and responses
   logger(req, res);
   req.log.info("/points/:user_id");
+  res.send(payerBalances);
 
-  // Redis caching payer balances -- for example purposes
-  redisClient.get("payerBalances").then((results) => {
-    if (!results) {
-      // if key isn't stored in cache
-      redisClient.set("payerBalances", JSON.stringify(payerBalances));
-      redisClient.get("payerBalances").then((results) => {
-        res.send(JSON.parse(results!));
-      });
-    } else {
-      res.send(JSON.parse(results));
-    }
-  });
+  // // Redis caching payer balances -- for example purposes
+  // redisClient.get("payerBalances").then((results) => {
+  //   if (!results) {
+  //     // if key isn't stored in cache
+  //     redisClient.set("payerBalances", JSON.stringify(payerBalances));
+  //     redisClient.get("payerBalances").then((results) => {
+  //       res.send(JSON.parse(results!));
+  //     });
+  //   } else {
+  //     res.send(JSON.parse(results));
+  //   }
+  // });
 });
 
 // add points: request body validation schema
@@ -186,9 +185,6 @@ app.post("/points/:user_id/add", (req: Request, res: Response) => {
   if (error === undefined) { // add transaction to userTransactions if valid request
     // add points
     addPoints(value)
-
-    // set new value for payerBalances in Redis cache
-    redisClient.set('payerBalances', JSON.stringify(payerBalances))
 
     res.sendStatus(201);
   } else { // send error code if invalid request
@@ -218,9 +214,6 @@ app.post("/points/:user_id/subtract", (req: Request, res: Response) => {
 
     // assign new object containing differences in balance
     const changes = getBalanceDifferences(payerBalanceChanges, payerBalances);
-
-    // set new value for payerBalances in Redis cache
-    redisClient.set("payerBalances", JSON.stringify(payerBalances));
 
     res.send(changes);
   } else {
