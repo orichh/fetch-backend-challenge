@@ -19,10 +19,9 @@
 4. Prettier
 5. Docker / Docker-compose
 6. React via create-react-app
-7. Redis
-8. Pino / Pino-http
-9. Forever
-10. OpenAPI / Swagger UI
+7. Pino / Pino-http
+8. Forever
+9. OpenAPI / Swagger UI
 
 # 2 Ways to Run This Application:
 1. With Docker and `docker-compose up`
@@ -70,25 +69,15 @@ axios.post("http://localhost:5000/points/1/subtract", {points: 1000})
 2. Open terminal on local machine
 3. Run `git clone git@github.com:richardhyesungo/fetch-backend-challenge.git`
 4. Run `cd fetch-backend-challenge` to move into the repo folder
-5. Make sure that the `/src/redis.ts` file has redis client docker configuration like below:
-    ```
-    const redisClient = redis.createClient({
-      socket: { port: 6379, host: "redis" },
-    });
-    ```
-7. Create docker image by running the terminal command `docker build -t "fbc" ./`
-8. Run the express server with the terminal command `docker-compose up`
+6. Create docker image by running the terminal command `docker build -t "fbc" ./`
+7. Run the express server with the terminal command `docker-compose up`
 
 ### Running without docker
 1. Open terminal on local machine
 2. Run `git clone git@github.com:richardhyesungo/fetch-backend-challenge.git`
 3. Run `cd fetch-backend-challenge` to move into the repo folder
-4. Make sure that the `/src/redis.ts` file has redis client local configuration like below:
-    ```
-    const redisClient = redis.createClient();
-    ```
-5. Run `npm ci` to install dependencies
-6. Run `npm start` to run the server
+4. Run `npm ci` to install dependencies
+5. Run `npm start` to run the server
 
 ## Optional - Run with OpenAPI / Swagger
 1. Navigate to localhost:5000/api-docs after starting the server
