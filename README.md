@@ -1,4 +1,4 @@
-<h1 align="center">Fetch Rewards Coding Exercise - Backend Software Engineering</h1>
+<h1 align="center">Take-Home Coding Exercise - Backend Software Engineering</h1>
 
 <table align="center">
   <tr>
